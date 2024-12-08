@@ -68,5 +68,5 @@ def blogs_update(request, pk):
     if serializer.is_valid():
         serializer.save()
         return Response({"detail": "Hammasi muvoffaqiyatli yaratildi."}, status=status.HTTP_200_OK)
-    return Response({"error": "Ma'lumot xato."}, status=status.HTTP_400_BAD_REQUEST)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
