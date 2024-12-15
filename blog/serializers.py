@@ -36,3 +36,18 @@ class BlogUpdateSerializer(serializers.ModelSerializer):
         instance.description = validated_data.get('description', instance.description)
         instance.save()
         return instance
+
+
+class BlogSerializer(serializers.ModelSerializer):  # CRUD
+    characters = serializers.SerializerMethodField()
+    words = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Blog
+        fields = ['id', 'title', 'description', 'created', 'updated', 'characters', "words"]
+
+    def get_characters(self, obj):
+        return len(obj.description)
+
+    def get_words(self, obj):
+        return len(obj.description.split())

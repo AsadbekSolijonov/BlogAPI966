@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from django.db.models import Q
 from blog.models import Blog
 from blog.serializers import BlogListSerializer, BlogDetailSerializer, BlogSearchSerializer, BlogCreateSerizlier, \
-    BlogUpdateSerializer
+    BlogUpdateSerializer, BlogSerializer
 from rest_framework.decorators import api_view
 
 
@@ -12,7 +12,7 @@ from rest_framework.decorators import api_view
 def list_blogs(request):
     # /api/v1/blogs/
     blogs = Blog.objects.all()
-    serializer = BlogListSerializer(blogs, many=True)
+    serializer = BlogSerializer(blogs, many=True)
     return Response(serializer.data)
 
 
@@ -25,7 +25,7 @@ def detail_blog(request, pk):
         data = {"detail": f"Blog {pk} is not found!"}
         return Response(data)
 
-    serializer = BlogDetailSerializer(blog)
+    serializer = BlogSerializer(blog)
     return Response(serializer.data)
 
 
@@ -44,29 +44,35 @@ def search_blogs(request):
     else:
         blogs = Blog.objects.all()
 
-    serializer = BlogSearchSerializer(blogs, many=True)
+    serializer = BlogSerializer(blogs, many=True)
     return Response(serializer.data)
 
 
-@api_view(['POST'])
+@api_view(['POST'])  # CREATE
 def blogs_create(request):
     try:
-        serializer = BlogCreateSerizlier(data=request.data)
+        serializer = BlogSerializer(data=request.data)
         if serializer.is_valid():
             blog = serializer.save()
-            response_serializer = BlogCreateSerizlier(blog)
+            response_serializer = BlogSerializer(blog)
             return Response({"success": "Created OK", "detail": response_serializer.data}, status=201)
         return Response(serializer.errors, status=400)
     except Exception as e:
         return Response({"errors": str(e)}, status=500)
 
 
-@api_view(['PUT'])
+@api_view(['PUT'])  # UPDATE
 def blogs_update(request, pk):
     blog = get_object_or_404(Blog, id=pk)
-    serializer = BlogUpdateSerializer(blog, request.data)
+    serializer = BlogSerializer(blog, request.data)
     if serializer.is_valid():
         serializer.save()
-        return Response({"detail": "Hammasi muvoffaqiyatli yaratildi."}, status=status.HTTP_200_OK)
+        return Response({"detail": "Hammasi muvoffaqiyatli yangilandi."}, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+@api_view(['DELETE'])
+def blogs_delete(request, pk):
+    blog = get_object_or_404(Blog, id=pk)
+    blog.delete()
+    return Response({"success": f"Blog id:{pk} muvoffaqiyatli o'chirildi"}, status=status.HTTP_204_NO_CONTENT)
