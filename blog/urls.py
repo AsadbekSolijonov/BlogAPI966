@@ -2,10 +2,11 @@ from django.urls import path
 from blog import views
 
 urlpatterns = [
-    path('blogs/', views.list_blogs, name='list-blogs'),
-    path('blog/<int:pk>/detail', views.detail_blog, name='detail-blog'),
+    # fbw
     path('blogs/search/', views.search_blogs, name='search-blogs'),
-    path('blogs/create/', views.blogs_create, name='blogs-create'),
-    path('blogs/update/<int:pk>', views.blogs_update, name='blogs_update'),
-    path('blogs/delete/<int:pk>', views.blogs_delete, name='blogs_delete'),
+
+    # cbw
+    path('cbw/blogs/', views.BlogListCreateAPIView.as_view(), name='cbw-blogs-list-create'),
+    path('cbw/blogs/<int:pk>/', views.BlogRetriveUpdateDeleteAPIView.as_view(), name='cbw-blogs-retrive-update-delete')
+
 ]
