@@ -20,7 +20,18 @@ from rest_framework.decorators import api_view
 
 class BlogListCreateAPIView(APIView):
     def get(self, request):
+        # default
         blogs = Blog.objects.all()
+        # serach
+        title = request.query_params.get("title", None)
+        desc = request.query_params.get("description", None)
+
+        if title:
+            blogs = blogs.filter(title__icontains=title)
+
+        if desc:
+            blogs = blogs.filter(description__icontains=desc)
+
         serializer = BlogSerializer(blogs, many=True)
         return Response(serializer.data)
 
@@ -51,21 +62,3 @@ class BlogRetriveUpdateDeleteAPIView(APIView):
         blog.delete()
         return Response({"success": "Blog deleted"}, status=status.HTTP_204_NO_CONTENT)
 
-
-@api_view(['GET'])
-def search_blogs(request):
-    # /api/v1/blogs/search/?title={}&desc={}
-    title = request.query_params.get('title')
-    desc = request.query_params.get('desc')
-
-    if title and desc:
-        blogs = Blog.objects.filter(Q(title__icontains=title), Q(description__icontains=desc))
-    elif title:
-        blogs = Blog.objects.filter(title__icontains=title)
-    elif desc:
-        blogs = Blog.objects.filter(description__icontains=desc)
-    else:
-        blogs = Blog.objects.all()
-
-    serializer = BlogSerializer(blogs, many=True)
-    return Response(serializer.data)
