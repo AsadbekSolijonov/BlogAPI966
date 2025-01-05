@@ -6,7 +6,6 @@ from rest_framework.views import APIView
 
 from blog.models import Blog
 from blog.serializers import BlogSerializer
-from rest_framework.decorators import api_view
 
 
 # View Yozish usuli

@@ -1,53 +1,32 @@
+from django.contrib.auth.models import User
 from rest_framework import serializers
 from blog.models import Blog
 
 
-class BlogListSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
+    full_name = serializers.CharField(source="get_full_name")
+
     class Meta:
-        model = Blog
-        fields = ['id', 'title', 'description']
-
-
-class BlogDetailSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Blog
-        fields = '__all__'
-
-
-class BlogSearchSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Blog
-        exclude = ['id']
-
-
-class BlogCreateSerizlier(serializers.ModelSerializer):
-    class Meta:
-        model = Blog
-        fields = '__all__'
-
-
-class BlogUpdateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Blog
-        fields = '__all__'
-
-    def update(self, instance, validated_data):
-        instance.title = validated_data.get('title', instance.title)
-        instance.description = validated_data.get('description', instance.description)
-        instance.save()
-        return instance
+        model = User
+        fields = ["id", "username", "full_name"]
 
 
 class BlogSerializer(serializers.ModelSerializer):  # CRUD
     characters = serializers.SerializerMethodField()
     words = serializers.SerializerMethodField()
+    author = UserSerializer()
+
+    # author = serializers.SerializerMethodField()  # read_only=True
 
     class Meta:
         model = Blog
-        fields = ['id', 'title', 'description', 'created', 'updated', 'characters', "words"]
+        fields = ['id', 'title', 'description', 'created', 'updated', 'characters', "words", "author"]
 
     def get_characters(self, obj):
         return len(obj.description)
 
     def get_words(self, obj):
         return len(obj.description.split())
+
+    # def get_author(self, obj):
+    #     return obj.author.username
