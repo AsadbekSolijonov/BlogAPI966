@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import status
+from rest_framework.authentication import TokenAuthentication
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
@@ -7,6 +8,7 @@ from django.db.models import Q
 from rest_framework.views import APIView
 
 from blog.models import Blog
+from blog.permissions import IsAdminOrOwner
 from blog.serializers import BlogSerializer, UserTokenSerializer
 
 
@@ -18,14 +20,35 @@ from blog.serializers import BlogSerializer, UserTokenSerializer
 # View: APIView
 # Generic
 # ViewSet
+class MyBlogListAPIView(APIView):
+    authentication_classes = [TokenAuthentication, ]
+    permission_classes = [IsAuthenticated, IsAdminOrOwner]
+
+    def get(self, request, *args, **kwargs):
+        # owner
+        blogs = Blog.objects.filter(author=request.user)
+        # search
+        title = request.query_params.get("title", None)
+        desc = request.query_params.get("description", None)
+
+        if title:
+            blogs = blogs.filter(title__icontains=title)
+
+        if desc:
+            blogs = blogs.filter(description__icontains=desc)
+
+        serializer = BlogSerializer(blogs, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class BlogListCreateAPIView(APIView):
-    permission_classes = [IsAuthenticated, ]
+    authentication_classes = [TokenAuthentication, ]
+    permission_classes = [IsAuthenticated, IsAdminOrOwner]
 
     def get(self, request):
-        # default
+        # all
         blogs = Blog.objects.all()
-        # serach
+        # search
         title = request.query_params.get("title", None)
         desc = request.query_params.get("description", None)
 
@@ -47,15 +70,18 @@ class BlogListCreateAPIView(APIView):
 
 
 class BlogRetriveUpdateDeleteAPIView(APIView):
-    permission_classes = [IsAuthenticated, ]
+    authentication_classes = [TokenAuthentication, ]
+    permission_classes = [IsAuthenticated, IsAdminOrOwner]
 
-    def get(self, requset, pk):
+    def get(self, request, pk):
         blog = get_object_or_404(Blog, id=pk)
+        self.check_object_permissions(request, blog)
         serializer = BlogSerializer(blog)
         return Response(serializer.data)
 
     def put(self, request, pk):
         blog = get_object_or_404(Blog, id=pk)
+        self.check_object_permissions(request, blog)
         serializer = BlogSerializer(blog, data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -64,6 +90,7 @@ class BlogRetriveUpdateDeleteAPIView(APIView):
 
     def delete(self, request, pk):
         blog = get_object_or_404(Blog, id=pk)
+        self.check_object_permissions(request, blog)
         blog.delete()
         return Response({"success": "Blog deleted"}, status=status.HTTP_204_NO_CONTENT)
 
